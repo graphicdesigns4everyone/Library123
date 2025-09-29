@@ -259,7 +259,7 @@ const StudentManagement: React.FC<StudentManagementProps> = ({
       {/* Student Details Modal */}
       {viewingStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Student Details</h3>
               <button
@@ -270,6 +270,22 @@ const StudentManagement: React.FC<StudentManagementProps> = ({
               </button>
             </div>
             <div className="space-y-4">
+              {/* Student Photo */}
+              {viewingStudent.photo && (
+                <div className="flex justify-center mb-6">
+                  <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200">
+                    <img
+                      src={viewingStudent.photo}
+                      alt={`${viewingStudent.name}'s photo`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -310,13 +326,6 @@ const StudentManagement: React.FC<StudentManagementProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Vehicle Number</label>
                   <p className="text-sm text-gray-900">{viewingStudent.vehicleNumber}</p>
-                </div>
-              )}
-              
-              {viewingStudent.photo && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Student Photo</label>
-                  <p className="text-sm text-gray-500">Photo: {viewingStudent.photo}</p>
                 </div>
               )}
               
@@ -397,7 +406,19 @@ const StudentManagement: React.FC<StudentManagementProps> = ({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                        {student.photo ? (
+                          <img
+                            src={student.photo}
+                            alt={`${student.name}'s photo`}
+                            className="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              target.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <div className={`h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center ${student.photo ? 'hidden' : ''}`}>
                           <User className="h-5 w-5 text-indigo-600" />
                         </div>
                       </div>

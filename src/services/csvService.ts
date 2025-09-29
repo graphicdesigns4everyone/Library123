@@ -6,11 +6,15 @@ import { Student } from '../types';
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTLuwG2m6ACFc_ChKtyAR16e_9BU1mM7W9FPZvJY9Oi4C5g_RNiNThVhVPTrdC1vGdADw0BeaEJ2_pV/pub?output=csv';
 
 export interface CSVStudent {
-  Name: string;
-  email: string;
+  Timestamp: string;
+  'email id': string;
+  'student name': string;
   'mobile number': string;
   'parents name': string;
-  "parent's mobile number": string;
+  'number': string; // parent's number
+  'address': string;
+  'vehicle number': string;
+  'student photo': string;
 }
 
 export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
@@ -83,18 +87,11 @@ export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
                       }
                     }
                     
-                    // Second pass: try partial matches only if no exact matches found, with explicit exclusions
+                    // Second pass: try partial matches only if no exact matches found
                     for (const fieldName of fieldNames) {
                       const partialMatch = keys.find(key => {
                         const keyLower = key.toLowerCase();
                         const fieldLower = fieldName.toLowerCase();
-                        
-                        // Explicitly avoid problematic false matches
-                        if (fieldLower === 'address' && keyLower.includes('email')) {
-                          return false;
-                        }
-                        
-                        // Only match if field name appears as complete word in the key
                         return keyLower.includes(fieldLower) && fieldLower.length > 3;
                       });
                       
@@ -106,15 +103,16 @@ export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
                     return '';
                   };
 
-                  const name = getField(['Name', 'name', 'student name', 'Student Name']);
-                  const email = getField(['email', 'Email', 'E-mail', 'e-mail', 'Email Address']);
-                  const mobile = getField(['mobile number', 'Mobile Number', 'mobile', 'Mobile', 'phone', 'Phone']);
-                  const parentName = getField(['Parents name', 'parents name', 'Parents Name', 'parent name', 'Parent Name', 'Guardian Name', "Parent's Name"]);
-                  const parentMobile = getField(["Parent's number", "parent's number", "Parent's Mobile Number", "Parent's mobile number", 'parent mobile', 'Parent Mobile', 'guardian mobile']);
-                  const address = getField(['address', 'Address', 'home address', 'Home Address', 'student address', 'Student Address']);
-                  const vehicleNumber = getField(['Vehicle number', 'vehicle number', 'Vehicle Number', 'vehicle no', 'Vehicle No', 'bike number', 'car number']);
-                  const photo = getField(['student photo', 'Student photo', 'Student Photo', 'photo', 'Photo', 'image', 'student image']);
-                  
+                  // Extract data based on your specific column names
+                  const timestamp = getField(['Timestamp', 'timestamp']);
+                  const name = getField(['student name', 'Student name', 'Student Name', 'name', 'Name']);
+                  const email = getField(['email id', 'Email id', 'Email ID', 'email', 'Email']);
+                  const mobile = getField(['mobile number', 'Mobile number', 'Mobile Number', 'mobile', 'Mobile']);
+                  const parentName = getField(['parents name', 'Parents name', 'Parents Name', 'parent name', 'Parent Name']);
+                  const parentMobile = getField(['number', 'Number', 'parent number', 'Parent number', 'parents number', 'Parents number']);
+                  const address = getField(['address', 'Address']);
+                  const vehicleNumber = getField(['vehicle number', 'Vehicle number', 'Vehicle Number']);
+                  const photo = getField(['student photo', 'Student photo', 'Student Photo']);
 
                   // Skip rows with missing essential data
                   if (!name || !mobile) {
@@ -122,8 +120,20 @@ export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
                     return null;
                   }
 
+                  // Parse timestamp to get registration date
+                  let registrationDate: Date;
+                  if (timestamp) {
+                    // Try to parse the timestamp from Google Forms
+                    registrationDate = new Date(timestamp);
+                    if (isNaN(registrationDate.getTime())) {
+                      // If parsing fails, use current date
+                      registrationDate = new Date();
+                    }
+                  } else {
+                    registrationDate = new Date();
+                  }
+
                   // Calculate fee expiry date (exactly 1 month from registration)
-                  const registrationDate = new Date();
                   const feeExpiryDate = new Date(registrationDate);
                   feeExpiryDate.setMonth(feeExpiryDate.getMonth() + 1);
 
@@ -136,11 +146,11 @@ export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
                     parentMobile: parentMobile || mobile, // Use student mobile if parent mobile not provided
                     address: address || undefined,
                     vehicleNumber: vehicleNumber || undefined,
-                    photo: photo || undefined,
+                    photo: photo || undefined, // This will be the Google Drive/Forms photo URL
                     registrationDate: registrationDate.toISOString().split('T')[0],
                     feeExpiryDate: feeExpiryDate.toISOString().split('T')[0],
                     status: 'active',
-                    totalFeesPaid: 0, // Will be updated manually by owner
+                    totalFeesPaid: 0,
                   };
 
                   console.log(`Processed student ${index + 1}:`, student);
@@ -166,7 +176,7 @@ export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
             reject(error);
           }
         },
-        error: (error : unknown) => {
+        error: (error: unknown) => {
           console.error('Error parsing CSV:', error);
           reject(error);
         }
