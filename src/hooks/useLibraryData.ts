@@ -151,9 +151,15 @@ export const useLibraryData = () => {
       // Generate new ID
       const newId = `student-${Date.now()}`;
       
+      // Calculate fee expiry date (exactly 1 month from registration date)
+      const registrationDate = new Date(studentData.registrationDate);
+      const feeExpiryDate = new Date(registrationDate);
+      feeExpiryDate.setMonth(feeExpiryDate.getMonth() + 1);
+      
       const newStudent: Student = {
         ...studentData,
         id: newId,
+        feeExpiryDate: feeExpiryDate.toISOString().split('T')[0],
       };
       
       const updatedStudents = [...students, newStudent];
