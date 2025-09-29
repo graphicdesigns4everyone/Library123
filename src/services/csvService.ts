@@ -120,6 +120,40 @@ export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
                     return null;
                   }
 
+                  // Process Google Drive photo URL if present
+                  let processedPhotoUrl = '';
+                  if (photo && photo.trim()) {
+                    // Check if it's a Google Drive URL and convert to direct view URL
+                    if (photo.includes('drive.google.com')) {
+                      // Extract file ID from various Google Drive URL formats
+                      let fileId = '';
+                      
+                      // Format: https://drive.google.com/file/d/FILE_ID/view
+                      const viewMatch = photo.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                      if (viewMatch) {
+                        fileId = viewMatch[1];
+                      }
+                      
+                      // Format: https://drive.google.com/open?id=FILE_ID
+                      const openMatch = photo.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                      if (openMatch) {
+                        fileId = openMatch[1];
+                      }
+                      
+                      if (fileId) {
+                        // Convert to direct image URL
+                        processedPhotoUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                        console.log(`Converted Google Drive URL for ${name}:`, processedPhotoUrl);
+                      } else {
+                        console.warn(`Could not extract file ID from Google Drive URL for ${name}:`, photo);
+                        processedPhotoUrl = photo; // Use original URL as fallback
+                      }
+                    } else {
+                      // Use the URL as-is if it's not a Google Drive URL
+                      processedPhotoUrl = photo;
+                    }
+                  }
+
                   // Parse timestamp to get registration date
                   let registrationDate: Date;
                   if (timestamp) {
@@ -146,14 +180,19 @@ export const fetchStudentsFromCSV = async (): Promise<Student[]> => {
                     parentMobile: parentMobile || mobile, // Use student mobile if parent mobile not provided
                     address: address || undefined,
                     vehicleNumber: vehicleNumber || undefined,
-                    photo: photo || undefined, // This will be the Google Drive/Forms photo URL
+                    photo: processedPhotoUrl || undefined, // Processed Google Drive photo URL
                     registrationDate: registrationDate.toISOString().split('T')[0],
                     feeExpiryDate: feeExpiryDate.toISOString().split('T')[0],
                     status: 'active',
                     totalFeesPaid: 0,
                   };
 
-                  console.log(`Processed student ${index + 1}:`, student);
+                  console.log(`Processed student ${index + 1}:`, { 
+                    name: student.name, 
+                    mobile: student.mobile,
+                    hasPhoto: !!student.photo,
+                    photoUrl: student.photo 
+                  });
                   return student;
                 } catch (error) {
                   console.error(`Error processing row ${index + 1}:`, error, row);

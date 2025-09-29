@@ -273,15 +273,38 @@ const StudentManagement: React.FC<StudentManagementProps> = ({
               {/* Student Photo */}
               {viewingStudent.photo && (
                 <div className="flex justify-center mb-6">
-                  <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200">
+                  <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
                     <img
                       src={viewingStudent.photo}
                       alt={`${viewingStudent.name}'s photo`}
                       className="w-full h-full object-cover"
+                      crossOrigin="anonymous"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
+                        const target = e.target as HTMLImageElement;
+                        console.error('Failed to load image:', viewingStudent.photo);
+                        target.style.display = 'none';
+                        // Show fallback
+                        const fallback = target.parentElement?.querySelector('.photo-fallback') as HTMLElement;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                        }
+                      }}
+                      onLoad={() => {
+                        console.log('Successfully loaded image:', viewingStudent.photo);
                       }}
                     />
+                    <div className="photo-fallback w-full h-full flex items-center justify-center text-gray-400" style={{ display: 'none' }}>
+                      <User className="w-16 h-16" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Show fallback if no photo */}
+              {!viewingStudent.photo && (
+                <div className="flex justify-center mb-6">
+                  <div className="w-32 h-32 rounded-lg border-2 border-gray-200 bg-gray-100 flex items-center justify-center">
+                    <User className="w-16 h-16 text-gray-400" />
                   </div>
                 </div>
               )}
@@ -411,10 +434,15 @@ const StudentManagement: React.FC<StudentManagementProps> = ({
                             src={student.photo}
                             alt={`${student.name}'s photo`}
                             className="h-10 w-10 rounded-full object-cover border-2 border-gray-200"
+                            crossOrigin="anonymous"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
+                              console.error('Failed to load avatar image:', student.photo);
                               target.style.display = 'none';
                               target.nextElementSibling?.classList.remove('hidden');
+                            }}
+                            onLoad={() => {
+                              console.log('Successfully loaded avatar image:', student.photo);
                             }}
                           />
                         ) : null}
