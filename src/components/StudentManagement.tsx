@@ -309,6 +309,20 @@ const StudentManagement: React.FC<StudentManagementProps> = ({
                 </div>
               )}
               
+              {/* Debug info for photo URL */}
+              {viewingStudent.photo && (
+                <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                  <label className="block text-sm font-medium text-gray-700">Photo URL (Debug)</label>
+                  <p className="text-xs text-gray-600 break-all">{viewingStudent.photo}</p>
+                  <button
+                    onClick={() => window.open(viewingStudent.photo, '_blank')}
+                    className="text-xs text-indigo-600 hover:text-indigo-800 mt-1"
+                  >
+                    Test URL in new tab
+                  </button>
+                </div>
+              )}
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Name</label>
